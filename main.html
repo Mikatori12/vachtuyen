@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ quận/huyện</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bản đồ quận/huyện</h1>
+    <label for="district">Nhập tên quận/huyện:</label>
+    <input type="text" id="district" placeholder="Ví dụ: Quận 1, Hồ Chí Minh">
+    <button onclick="loadDistrict()">Tải bản đồ</button>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let districtLayer;
+
+        // Khởi tạo bản đồ
+        function initMap() {
+            map = L.map('map').setView([10.8231, 106.6297], 13); // Vị trí mặc định (Hồ Chí Minh)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Tải ranh giới quận/huyện
+        function loadDistrict() {
+            const districtName = document.getElementById('district').value;
+            if (!districtName) {
+                alert('Vui lòng nhập tên quận/huyện');
+                return;
+            }
+
+            // Giả sử dữ liệu GeoJSON được lưu trong file districts.geojson
+            fetch('districts.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    const district = data.features.find(feature => feature.properties.name === districtName);
+                    if (!district) {
+                        alert('Không tìm thấy quận/huyện');
+                        return;
+                    }
+
+                    if (districtLayer) {
+                        map.removeLayer(districtLayer);
+                    }
+
+                    districtLayer = L.geoJSON(district, {
+                        style: {
+                            color: 'blue',
+                            weight: 2,
+                            fillOpacity: 0.1
+                        }
+                    }).addTo(map);
+
+                    map.fitBounds(districtLayer.getBounds());
+                })
+                .catch(error => console.error('Lỗi khi tải dữ liệu:', error));
+        }
+
+        initMap();
+    </script>
+</body>
+</html>
